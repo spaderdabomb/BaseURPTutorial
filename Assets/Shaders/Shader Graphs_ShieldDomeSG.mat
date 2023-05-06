@@ -48,9 +48,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _FresnelPower: 3.4
+    - _FresnelPower: 4.81
+    - _InnerAlpha: 0.1
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _Color: {r: 0.28622285, g: 0.56392, b: 0.9056604, a: 1}
+    - _Color: {r: 1.3532083, g: 2.1074555, b: 4.237095, a: 1}
   m_BuildTextureStacks: []
