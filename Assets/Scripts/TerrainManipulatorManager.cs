@@ -179,29 +179,6 @@ public class TerrainManipulatorManager : MonoBehaviour
             }
         }
 
-        // Print the original and smoothed arrays
-        Console.WriteLine("Original Array:");
-        PrintArray(array);
-
-        Console.WriteLine("Smoothed Array:");
-        PrintArray(smoothedArray);
-
         return smoothedArray;
-    }
-
-    static void PrintArray(float[,] array)
-    {
-        int rows = array.GetLength(0);
-        int cols = array.GetLength(1);
-
-        for (int row = 0; row < rows; row++)
-        {
-            for (int col = 0; col < cols; col++)
-            {
-                Console.Write(array[row, col] + " ");
-            }
-            Console.WriteLine();
-        }
-        Console.WriteLine();
     }
 }
