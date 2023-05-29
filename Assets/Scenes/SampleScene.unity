@@ -384,12 +384,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df10bd432b9f6454c8bd28955885351f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  terrain: {fileID: 0}
-  smoothingRadius: 7
+  terrain: {fileID: 1611181215}
+  smoothingRadius: 1
   playerGO: {fileID: 1925538439}
-  maxSmoothingDelta: 0.002
-  maxVertexDelta: 0.002
-  postProcessingSmoothingRadius: 1
+  maxSmoothingDelta: 0.001
+  postProcessingSmoothingRadius: 2
 --- !u!114 &371613643
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -441,7 +440,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 1
+    m_Strength: 0.479
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -781,17 +780,17 @@ PrefabInstance:
     - target: {fileID: 4459864850019384738, guid: 6bacecc4f3df9584198879c73a6b6c36,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 26.41565
+      value: 512.3
       objectReference: {fileID: 0}
     - target: {fileID: 4459864850019384738, guid: 6bacecc4f3df9584198879c73a6b6c36,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.8673706
+      value: 109.2
       objectReference: {fileID: 0}
     - target: {fileID: 4459864850019384738, guid: 6bacecc4f3df9584198879c73a6b6c36,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 907.07135
+      value: 434.2
       objectReference: {fileID: 0}
     - target: {fileID: 4459864850019384738, guid: 6bacecc4f3df9584198879c73a6b6c36,
         type: 3}

@@ -13,8 +13,10 @@ public class TerrainManipulatorManager : MonoBehaviour
     public float smoothingRadius = 2f;
     public GameObject playerGO;
     public float maxSmoothingDelta = 1f / 500f;
-    public float maxVertexDelta = 1f / 10f;
     public int postProcessingSmoothingRadius = 1;
+
+    private Vector3 gizmosVector3 = Vector3.zero;
+    private Vector3 gizmosVector3_2 = Vector3.zero;
 
     private void Update()
     {
@@ -46,7 +48,16 @@ public class TerrainManipulatorManager : MonoBehaviour
         int radiusInSamples = Mathf.RoundToInt(smoothingRadius / terrainData.size.x * terrainData.heightmapResolution);
         int gridSize = radiusInSamples * 2 + 1;
 
-        print(gridSize);
+        print("Grid Height: " + gridSize.ToString());
+
+        float playerTerrainVertexX = terrainXatPlayer * (terrainData.size.x / terrainData.heightmapResolution);
+        float playerTerrainVertexY = playerGO.transform.position.y;
+        float playerTerrainVertexZ = terrainZatPlayer * (terrainData.size.z / terrainData.heightmapResolution);
+
+        gizmosVector3 = new Vector3(playerTerrainVertexX, terrainData.GetHeight(terrainXatPlayer, terrainZatPlayer), playerTerrainVertexZ);
+
+        // Debug.DrawLine(playerGO.transform.position, Vector3.zero, Color.yellow);
+
 
         int terrainXOffset = (int)(roundedDirection.x * radiusInSamples);
         int terrainZOffset = (int)(roundedDirection.z * radiusInSamples);
@@ -57,76 +68,44 @@ public class TerrainManipulatorManager : MonoBehaviour
         // Get heights from terrain
         int terrainStartIndexX = terrainXatPlayer + terrainXOffset - radiusInSamples;
         int terrainStartIndexZ = terrainZatPlayer + terrainZOffset - radiusInSamples;
+
+
         float[,] heights = terrainData.GetHeights(terrainStartIndexX, terrainStartIndexZ, gridSize, gridSize);
         float centerPointHeight = heights[heightCenterZ, heightCenterX];
+
+        // DebugSquares(heights, terrainStartIndexX, terrainStartIndexZ, terrainXatPlayer, terrainZatPlayer, terrainData);
 
         for (int z = 0; z < gridSize; z++)
         {
             for (int x = 0; x < gridSize; x++)
             {
-                float distance = Mathf.Pow(centerPointHeight - x, 2) + Mathf.Pow(centerPointHeight - z, 2);
+                float distance = Mathf.Pow(heightCenterX - x, 2) + Mathf.Pow(heightCenterZ - z, 2);
                 float weight = Mathf.Clamp01(1 / distance);
-                float smoothedHeight = (centerPointHeight - heights[z, x]) * (weight/ 2f);
+
+                weight = 1f;
+                float smoothedHeightDelta = (centerPointHeight - heights[z, x]) * (weight/ 2f);
 
                 // Clamps height delta to max
-                // if (smoothedHeight > maxSmoothingDelta) smoothedHeight = maxSmoothingDelta;
-
-                // Checks all neighboring vertices
-                /*                bool maxVertexExceeded = CheckNeighboringVertices(heights, z, x);
-                                if (maxVertexExceeded) continue;*/
-
-                heights[z, x] += smoothedHeight;
-            }
-        }
-
-        // float[,] postProcessedHeights = SmoothingPostProcessing(heights, terrainStartIndexX, terrainStartIndexZ);
-
-        // terrainData.SetHeights(terrainStartIndexX - postProcessingSmoothingRadius, terrainStartIndexZ - postProcessingSmoothingRadius, postProcessedHeights);
-        terrainData.SetHeights(terrainStartIndexX, terrainStartIndexZ, heights);
-    }
-
-    private bool CheckNeighboringVertices(float[,] array, int row, int col)
-    {
-        int rows = array.GetLength(0); // Number of rows in the array
-        int cols = array.GetLength(1); // Number of columns in the array
-
-        // Make neighbor indices
-        int[,] neighbors = {
-                    { row - 1, col }, // Top
-                    { row + 1, col }, // Bottom
-                    { row, col - 1 }, // Left
-                    { row, col + 1 }  // Right
-                };
-
-        // Check if value exceeds max vertex value
-        bool maxVertexExceeded = false;
-        for (int i = 0; i < array.GetLength(0); i++)
-        {
-            for (int j = 0; j < array.GetLength(1); j++)
-            {
-                int neighborRow = row - i;
-                int neighborCol = col - j;
-
-                if (neighborRow >= 0 && neighborRow < rows && neighborCol >= 0 && neighborCol < cols)
+                float smoothingSign = Mathf.Sign(smoothedHeightDelta);
+                if (Mathf.Abs(smoothedHeightDelta) > maxSmoothingDelta)
                 {
-                    float neighborValue = array[neighborRow, neighborCol];
-                    print(Mathf.Abs((neighborValue - array[row, col])));
-                    if (Mathf.Abs((neighborValue - array[row, col])) > maxVertexDelta)
-                    {
-                        maxVertexExceeded = true;
-                        print("failed");
-                        break;
-                    }
+                    smoothedHeightDelta = maxSmoothingDelta * smoothingSign;
                 }
+                    
+                // if (maxVertexExceeded) continue;*/
+
+                heights[z, x] += smoothedHeightDelta;
             }
         }
 
-        return maxVertexExceeded;
+        float[,] postProcessedHeights = SmoothingPostProcessing(heights, terrainStartIndexX, terrainStartIndexZ);
+
+        terrainData.SetHeights(terrainStartIndexX - postProcessingSmoothingRadius, terrainStartIndexZ - postProcessingSmoothingRadius, postProcessedHeights);
+        // terrainData.SetHeights(terrainStartIndexX, terrainStartIndexZ, heights);
     }
 
     private float[,] SmoothingPostProcessing(float[,] array, int terrainStartIndexX, int terrainStartIndexZ)
     {
-        print(postProcessingSmoothingRadius);
         int inputRows = array.GetLength(0);
         int inputCols = array.GetLength(1);
 
@@ -175,10 +154,39 @@ public class TerrainManipulatorManager : MonoBehaviour
                 }
 
                 // Calculate the average and assign it to the corresponding element in the smoothed array
-                smoothedArray[row, col] = sum / count;
+                float delta = newHeights[row, col] - sum / count;
+                float smoothingSign = Mathf.Sign(delta);
+                if (Mathf.Abs(delta) > maxSmoothingDelta)
+                {
+                    delta = smoothingSign * maxSmoothingDelta;
+                }
+                smoothedArray[row, col] = newHeights[row, col] - delta;
             }
         }
 
         return smoothedArray;
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(gizmosVector3, 0.5f);
+        Gizmos.DrawWireSphere(gizmosVector3_2, 50f);
+    }
+
+    private void DebugSquares(float[,] heights, int terrainStartIndexX, int terrainStartIndexZ, int terrainXatPlayer, int terrainZatPlayer, TerrainData terrainData)
+    {
+        for (int i = 0; i < heights.GetLength(0); i++)
+        {
+            for (int j = 0; j < heights.GetLength(1); j++)
+            {
+                float vertexX = (terrainStartIndexX + i) * (terrainData.size.x / terrainData.heightmapResolution);
+                float vertexY = terrainData.GetHeight(terrainXatPlayer, terrainZatPlayer);
+                float vertexZ = (terrainStartIndexZ + j) * (terrainData.size.z / terrainData.heightmapResolution);
+
+                GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cube.transform.position = new Vector3(vertexX, vertexY, vertexZ);
+                cube.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            }
+        }
     }
 }
